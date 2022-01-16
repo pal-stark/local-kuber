@@ -1,0 +1,106 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+Vagrant.configure("2") do |config|
+  # The most common configuration options are documented and commented below.
+  # For a complete reference, please see the online documentation at
+  # https://docs.vagrantup.com.
+
+  # Every Vagrant development environment requires a box. You can search for
+  # boxes at https://vagrantcloud.com/search.
+  #config.vm.box = "centos/7"
+  config.vm.box = "generic/oracle8"
+  #config.vm.box = "oraclelinux/8"
+  #config.vm.box_url = "https://oracle.github.io/vagrant-projects/boxes/oraclelinux/8.json"
+  
+  # Disable automatic box update checking. If you disable this, then
+  # boxes will only be checked for updates when the user runs
+  # `vagrant box outdated`. This is not recommended.
+  # config.vm.box_check_update = false
+
+  # Create a forwarded port mapping which allows access to a specific port
+  # within the machine from a port on the host machine. In the example below,
+  # accessing "localhost:8080" will access port 80 on the guest machine.
+  # NOTE: This will enable public access to the opened port
+  # config.vm.network "forwarded_port", guest: 80, host: 8080
+
+  # Create a forwarded port mapping which allows access to a specific port
+  # within the machine from a port on the host machine and only allow access
+  # via 127.0.0.1 to disable public access
+  # config.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
+
+  # Create a private network, which allows host-only access to the machine
+  # using a specific IP.
+  config.vm.network "private_network", ip: "172.31.250.25"
+
+  # Create a public network, which generally matched to bridged network.
+  # Bridged networks make the machine appear as another physical device on
+  # your network.
+  # config.vm.network "public_network"
+
+  # Share an additional folder to the guest VM. The first argument is
+  # the path on the host to the actual folder. The second argument is
+  # the path on the guest to mount the folder. And the optional third
+  # argument is a set of non-required options.
+  # config.vm.synced_folder "../data", "/vagrant_data"
+  config.vm.synced_folder "../projects", "/home/vagrant/projects"
+  config.vm.synced_folder "./tpls", "/home/vagrant/tpls"
+
+  # Provider-specific configuration so you can fine-tune various
+  # backing providers for Vagrant. These expose provider-specific options.
+  # Example for VirtualBox:
+  #
+  config.vm.provider "virtualbox" do |vb|
+  #   # Display the VirtualBox GUI when booting the machine
+  #   vb.gui = true
+  #
+  #   # Customize the amount of memory on the VM:
+    vb.memory = "2048"
+    vb.cpus = "2"
+    vb.name = "workstation"
+    vb.customize ["setextradata", :id, "VBoxInternal2/SharedFoldersEnableSymlinksCreate/v-root", "1"]
+  end
+  #
+  # View the documentation for the provider you are using for more
+  # information on available options.
+
+  # Enable provisioning with a shell script. Additional provisioners such as
+  # Ansible, Chef, Docker, Puppet and Salt are also available. Please see the
+  # documentation for more information about their specific syntax and use.
+  config.vm.provision "shell", inline: <<-SHELL
+    hostnamectl set-hostname 'workstation'
+	  sed -i 's/SELINUX=enforcing/SELINUX=disabled/' /etc/sysconfig/selinux
+	  sed -i 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config
+	  setenforce 0
+	  sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+	  systemctl restart sshd
+
+	  dnf update all -y
+	  dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+	  dnf install -y http://rpms.remirepo.net/enterprise/remi-release-8.rpm
+	  dnf -y install dnf-utils git mc ca-certificates ansible go dotnet-sdk-5.0 python3 wget unzip kernel-devel -y
+    dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+    dnf config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
+    dnf install -y docker-ce docker-ce-cli containerd.io terraform
+    # Запускаем
+    systemctl start docker
+    # Разрешаем автозагрузку. 
+    systemctl enable docker
+    # Разрешаем запуск контейнеров пользователю от которого будем работать.
+    sudo usermod -aG docker vagrant
+    # Ставим doker-compose
+    wget "https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-$(uname -s)-$(uname -m)"
+    mv ./docker-compose-Linux-x86_64 /usr/local/bin/docker-compose
+    chmod +x /usr/local/bin/docker-compose
+    # Для ручного управление кубером потребуется kubectl
+    cp -f /home/vagrant/tpls/kubernetes.repo /etc/yum.repos.d/kubernetes.repo
+    dnf install -y kubectl
+    # Скорректируем сетевые настройки. Ибо у нас нет настоящего DNS сервера для виртуальных боксов :)
+    cp -f /home/vagrant/tpls/hosts /etc/hosts
+
+  SHELL
+end

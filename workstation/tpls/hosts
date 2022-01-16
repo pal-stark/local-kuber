@@ -1,0 +1,9 @@
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+
+127.0.0.1 workstation.local
+172.31.250.25 workstation.local ws.local
+172.31.250.20 kub kub.local
+172.31.250.20 kubcp kubcp.local
+172.31.250.21 kubwrk1 kubwrk1.local
+172.31.250.22 kubwrk2 kubwrk2.local

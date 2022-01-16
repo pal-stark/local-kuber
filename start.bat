@@ -1,0 +1,9 @@
+SET VAGRANT_PREFER_SYSTEM_BIN=0
+cd ./kubcp
+vagrant up
+cd ../kubwrk1
+vagrant up
+cd ../kubwrk2
+vagrant up
+cd ../workstation
+vagrant up

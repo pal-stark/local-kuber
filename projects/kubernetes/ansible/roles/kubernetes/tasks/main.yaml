@@ -1,0 +1,23 @@
+---
+
+- import_tasks: add-to-hosts.yml
+  tags: /etc/hosts
+- import_tasks: DISABLE-selinux-swap.yml
+  tags: disable-selinux-swap
+- import_tasks: install-repo.yml
+  tags: repo
+- import_tasks: preinstall.yml
+  tags: preinstall
+- import_tasks: install-docker.yml
+  tags: installdocker
+- import_tasks: docker_proxy.yaml
+  tags: docker_proxy
+  when: proxy
+- import_tasks: etcd.yml
+  tags: etcd
+- import_tasks: kubernetes.yml
+  tags: kubernetes
+- import_tasks: copy-key.yml
+  tags: copy
+- import_tasks: kubernetes-master-worker.yml
+  tags: master-worker

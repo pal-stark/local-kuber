@@ -1,0 +1,24 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "centos/7"
+  config.vm.network "private_network", ip: "172.31.250.20"
+
+  config.vm.provider "virtualbox" do |vb|
+     vb.memory = "2048"
+     vb.cpus = "2"
+     vb.name = "kubcp"
+  end
+  
+  config.vm.provision "shell", inline: <<-SHELL
+    hostnamectl set-hostname 'kubcp.local'
+    sed -i 's/SELINUX=enforcing/SELINUX=disabled/' /etc/sysconfig/selinux
+    sed -i 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config
+    setenforce 0
+    sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+    systemctl restart sshd
+
+    yum update -y
+  SHELL
+end

@@ -1,0 +1,8 @@
+[kubernetes:children]
+kubermaster
+kuberworker
+[kubermaster]
+172.31.250.20
+[kuberworker]
+172.31.250.21
+172.31.250.22
